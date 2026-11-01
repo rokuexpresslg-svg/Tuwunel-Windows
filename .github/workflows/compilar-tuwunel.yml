@@ -17,7 +17,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: matrix-construct/tuwunel
-          ref: 8ed90a2
+          ref: v1.9.4
           path: tuwunel
 
       - name: Instalar Rust
@@ -55,3 +55,5 @@ jobs:
           name: tuwunel-windows-x64
           path: tuwunel/target/x86_64-pc-windows-msvc/release/tuwunel.exe
           if-no-files-found: error
+
+
