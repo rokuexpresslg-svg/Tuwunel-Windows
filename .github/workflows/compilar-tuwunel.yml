@@ -1,0 +1,57 @@
+
+name: Compilar Tuwunel para Windows (MSVC)
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: windows-latest
+    timeout-minutes: 120
+
+    steps:
+      - name: Descargar código de Tuwunel
+        uses: actions/checkout@v4
+        with:
+          repository: matrix-construct/tuwunel
+          ref: 8ed90a2
+          path: tuwunel
+
+      - name: Instalar Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          toolchain: 1.95.0
+          targets: x86_64-pc-windows-msvc
+
+      - name: Instalar LLVM
+        uses: KyleMayes/install-llvm-action@v2
+        with:
+          version: 18
+
+      - name: Compilar Tuwunel
+        shell: pwsh
+        working-directory: tuwunel
+        env:
+          LIBCLANG_PATH: C:\Program Files\LLVM\bin
+          RUSTFLAGS: "-C target-cpu=goldmont-plus"
+        run: |
+          cargo build --release --locked --target x86_64-pc-windows-msvc --no-default-features --features element_hacks,gzip_compression,zstd_compression,lz4_compression,release_max_log_level
+
+      - name: Comprobar ejecutable
+        shell: pwsh
+        run: |
+          $exe = "tuwunel\target\x86_64-pc-windows-msvc\release\tuwunel.exe"
+          if (!(Test-Path $exe)) {
+            throw "No se generó tuwunel.exe"
+          }
+          Get-Item $exe | Select-Object Name, Length
+
+      - name: Guardar ejecutable
+        uses: actions/upload-artifact@v4
+        with:
+          name: tuwunel-windows-x64
+          path: tuwunel/target/x86_64-pc-windows-msvc/release/tuwunel.exe
+          if-no-files-found: error
